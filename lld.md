@@ -1189,17 +1189,17 @@ LOG_JSON=false \# true in production
 
 ## **Fase 2 — App base**
 
-- \[ \] config/settings.py
+- \[x\] config/settings.py
 
-- \[ \] app/providers/database.py
+- \[x\] app/providers/database.py
 
-- \[ \] app/providers/redis.py
+- \[x\] app/providers/redis.py
 
-- \[ \] app/providers/langsmith.py
+- \[x\] app/providers/langsmith.py
 
-- \[ \] app/\_\_init\_\_.py con create_app()
+- \[x\] app/\_\_init\_\_.py con create_app()
 
-- \[ \] GET /health risponde 200
+- \[x\] GET /health risponde 200
 
 ## **Fase 3 — Auth \+ Middleware**
 
