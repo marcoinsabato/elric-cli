@@ -1,5 +1,6 @@
 services:
   app:
+    container_name: elric-app
     build:
       context: ..
       dockerfile: docker/Dockerfile.dev
@@ -19,6 +20,7 @@ services:
 
   db:
     image: postgres:16-alpine
+    container_name: elric-db
     environment:
       POSTGRES_DB: elric_dev
       POSTGRES_USER: elric
@@ -37,6 +39,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: elric-redis
     ports:
       - "6379:6379"
     healthcheck:

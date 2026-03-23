@@ -1203,17 +1203,17 @@ LOG_JSON=false \# true in production
 
 ## **Fase 3 — Auth \+ Middleware**
 
-- \[ \] database/models/api_key.py
+- \[x\] database/models/api_key.py
 
-- \[ \] Migration api_keys
+- \[x\] Migration api_keys
 
-- \[ \] app/middleware/api_key.py
+- \[x\] app/middleware/api_key.py
 
-- \[ \] app/middleware/rate_limit.py
+- \[x\] app/middleware/rate_limit.py
 
-- \[ \] app/middleware/logging.py
+- \[x\] app/middleware/logging.py
 
-- \[ \] structlog configurato
+- \[x\] structlog configurato
 
 ## **Fase 4 — Error Handling**
 
