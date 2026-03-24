@@ -88,23 +88,39 @@ elric-app/
 
 │ ├── \_\_init\_\_.py
 
-│ ├── agents/ \# LangGraph agents
+│ ├── ai/ \# AI Components
 
 │ │ ├── \_\_init\_\_.py
 
-│ │ └── base_agent.py \# Classe base astratta
+│ │ ├── agents/ \# LangGraph agents
 
-│ ├── chains/ \# LangChain chains
+│ │ │ ├── \_\_init\_\_.py
+
+│ │ │ └── base_agent.py \# Classe base astratta
+
+│ │ ├── chains/ \# LangChain chains
 
 │ │ ├── \_\_init\_\_.py
 
 │ │ └── base_chain.py
 
-│ ├── tools/ \# LangChain tools
+│ │ ├── tools/ \# LangChain tools
 
-│ │ ├── \_\_init\_\_.py
+│ │ │ ├── \_\_init\_\_.py
 
-│ │ └── base_tool.py
+│ │ │ └── base_tool.py
+
+│ │ ├── memory/ \# Memory management
+
+│ │ │ └── \_\_init\_\_.py
+
+│ │ ├── vectorstore/ \# Vector databases
+
+│ │ │ └── \_\_init\_\_.py
+
+│ │ └── middleware/ \# AI-specific middleware
+
+│ │ └── \_\_init\_\_.py
 
 │ ├── routes/ \# FastAPI routers
 
@@ -1217,23 +1233,23 @@ LOG_JSON=false \# true in production
 
 ## **Fase 4 — Error Handling**
 
-- \[ \] app/exceptions/base.py
+- \[x\] app/exceptions/base.py
 
-- \[ \] app/exceptions/handler.py
+- \[x\] app/exceptions/handler.py
 
-- \[ \] Response JSON uniforme con trace_id
+- \[x\] Response JSON uniforme con trace_id
 
 ## **Fase 5 — CLI**
 
-- \[ \] 14 file stub in stubs/
+- \[x\] 14 file stub in stubs/
 
-- \[ \] elric_cli/ implementata
+- \[x\] elric_cli/ implementata
 
-- \[ \] uv run elric \--help funziona
+- \[x\] uv run elric \--help funziona
 
-- \[ \] make:agent genera file corretto
+- \[x\] make:agent genera file corretto
 
-- \[ \] migrate:\* wrappano alembic
+- \[x\] migrate:\* wrappano alembic
 
 ## **Fase 6 — Agents \+ Windsurf**
 

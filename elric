@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+"""Elric Framework CLI entry point."""
+import sys
+
+from elric_cli.app import app
+
+if __name__ == "__main__":
+    app()

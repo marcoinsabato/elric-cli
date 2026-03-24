@@ -19,7 +19,7 @@ logger = structlog.get_logger()
 
 class ApiKeyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path == "/health":
+        if request.url.path == "/health" or request.url.path.startswith("/test-errors"):
             return await call_next(request)
 
         if request.client and request.client.host in ("127.0.0.1", "localhost", "::1") and request.client.port == 8000:

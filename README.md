@@ -74,6 +74,40 @@ Questo avvierà PostgreSQL e Redis in background.
 uv run alembic upgrade head
 ```
 
+### 6. (Opzionale) Installa il comando `elric` globalmente
+
+Per usare `elric` come comando globale invece di `uv run elric`:
+
+```bash
+elric_cli/install.sh
+```
+
+Questo creerà un wrapper che ti permette di usare `elric` da qualsiasi directory:
+
+```bash
+elric --help
+elric make agent MyAgent
+elric serve
+```
+
+**Nota**: Se `~/.local/bin` non è nel tuo PATH, aggiungi questa riga al tuo `~/.zshrc` o `~/.bashrc`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Poi ricarica la shell:
+
+```bash
+source ~/.zshrc  # o source ~/.bashrc
+```
+
+Per disinstallare il comando globale:
+
+```bash
+elric_cli/uninstall.sh
+```
+
 ## Avvio dell'Applicazione
 
 ### Sviluppo locale (Raccomandato)
@@ -126,7 +160,17 @@ uv run gunicorn app:create_app --factory -w 4 -k uvicorn.workers.UvicornWorker -
 
 ### Creare una nuova API Key
 
-Crea uno script Python per generare una API key:
+**Con la CLI** (metodo raccomandato):
+
+```bash
+# Se hai installato elric globalmente
+elric apikey create "My App Name"
+
+# Oppure con uv run
+uv run elric apikey create "My App Name"
+```
+
+**Con uno script Python**:
 
 ```python
 # create_api_key.py
@@ -157,6 +201,18 @@ uv run python create_api_key.py
 
 **⚠️ IMPORTANTE**: Salva la chiave generata in un posto sicuro. Non verrà mostrata di nuovo.
 
+### Listare tutte le API Keys
+
+```bash
+elric apikey list
+```
+
+### Revocare una API Key
+
+```bash
+elric apikey revoke <key-id>
+```
+
 ### Usare l'API Key
 
 L'API key è richiesta solo per richieste esterne. Le richieste da `localhost` non richiedono autenticazione per facilitare lo sviluppo.
@@ -177,6 +233,14 @@ curl http://localhost:8000/docs
 
 ### Creare una nuova migration
 
+**Con la CLI**:
+
+```bash
+elric make migration "descrizione_migration"
+```
+
+**Con Alembic direttamente**:
+
 ```bash
 uv run alembic revision --autogenerate -m "descrizione_migration"
 ```
@@ -184,19 +248,98 @@ uv run alembic revision --autogenerate -m "descrizione_migration"
 ### Applicare le migrations
 
 ```bash
-uv run alembic upgrade head
+elric migrate
+# oppure: uv run alembic upgrade head
 ```
 
 ### Rollback ultima migration
 
 ```bash
-uv run alembic downgrade -1
+elric migrate rollback
+# oppure: uv run alembic downgrade -1
 ```
 
 ### Verificare stato migrations
 
 ```bash
-uv run alembic current
+elric migrate status
+# oppure: uv run alembic current
+```
+
+### Drop tutto e re-migra (⚠️ ATTENZIONE: cancella tutti i dati)
+
+```bash
+elric migrate fresh
+```
+
+## CLI Commands
+
+Elric fornisce una CLI completa per generare componenti e gestire l'applicazione.
+
+### Generazione Componenti (make:\*)
+
+```bash
+# Genera un nuovo LangGraph agent
+elric make agent ChatAgent
+
+# Genera una nuova LangChain chain
+elric make chain SummaryChain
+
+# Genera un nuovo LangChain tool
+elric make tool WebSearchTool
+
+# Genera un nuovo FastAPI router
+elric make route UserRoute
+
+# Genera un nuovo controller
+elric make controller UserController
+
+# Genera un nuovo Pydantic schema
+elric make schema UserSchema
+
+# Genera un nuovo SQLModel entity
+elric make model User
+
+# Genera un nuovo background job
+elric make job EmailJob
+
+# Genera una nuova custom exception
+elric make exception CustomException
+
+# Genera un nuovo test file
+elric make test UserTest
+```
+
+### Comandi Server
+
+```bash
+# Avvia il server di sviluppo con hot-reload
+elric serve
+
+# Avvia su porta personalizzata
+elric serve --port 3000
+
+# Avvia senza hot-reload
+elric serve --no-reload
+```
+
+### Comandi Route
+
+```bash
+# Lista tutte le routes registrate
+elric route list
+```
+
+### Tutti i comandi disponibili
+
+```bash
+# Mostra tutti i comandi
+elric --help
+
+# Mostra aiuto per un gruppo di comandi
+elric make --help
+elric migrate --help
+elric apikey --help
 ```
 
 ## Struttura del Progetto
@@ -204,12 +347,16 @@ uv run alembic current
 ```
 elric_framework/
 ├── app/
-│   ├── agents/          # LangGraph agents
-│   ├── chains/          # LangChain chains
-│   ├── tools/           # LangChain tools
+│   ├── ai/              # AI Components
+│   │   ├── agents/      # LangGraph agents
+│   │   ├── chains/      # LangChain chains
+│   │   ├── tools/       # LangChain tools
+│   │   ├── memory/      # Memory management
+│   │   ├── vectorstore/ # Vector databases
+│   │   └── middleware/  # AI-specific middleware
 │   ├── routes/          # FastAPI routes
 │   ├── controllers/     # Business logic
-│   ├── middleware/      # Custom middleware
+│   ├── middleware/      # HTTP middleware
 │   ├── providers/       # Database, Redis, LangSmith
 │   ├── schemas/         # Pydantic schemas
 │   ├── exceptions/      # Custom exceptions
@@ -225,6 +372,10 @@ elric_framework/
 │   ├── unit/
 │   ├── integration/
 │   └── e2e/
+├── elric_cli/           # CLI tools
+│   ├── commands/        # CLI commands
+│   ├── install.sh       # Global installation
+│   └── uninstall.sh     # Uninstallation
 ├── docker/              # Docker configs
 └── stubs/               # Code generation templates
 ```
@@ -250,6 +401,22 @@ elric_framework/
 - Rate limiting (sliding window)
 - Logging strutturato con trace_id
 - Alembic configurato per migrations async
+
+### ✅ Fase 4 - Error Handling
+
+- Gerarchia completa di custom exceptions
+- Global exception handler con risposte JSON uniformi
+- Trace ID in tutte le risposte di errore
+- Logging strutturato degli errori
+
+### ✅ Fase 5 - CLI Elric
+
+- 14 stub files per generazione componenti
+- CLI completa con Typer (19 comandi)
+- Comandi make:\* per generare agent, chain, tool, route, etc.
+- Comandi migrate:\* che wrappano Alembic
+- Comandi apikey:\* per gestione API keys
+- Script di installazione globale (install.sh/uninstall.sh)
 
 ## Logging
 
@@ -335,9 +502,9 @@ redis-cli ping  # Dovrebbe rispondere PONG
 
 ## Prossime Fasi
 
-- **Fase 4**: Error handling centralizzato
-- **Fase 5**: CLI con Typer (comandi `make:*`, `migrate:*`, etc.)
 - **Fase 6**: Base classes per Agents, Chains, Tools
+- **Fase 7**: Windsurf rules per AI-assisted development
+- **Fase 8**: Testing completo e CI/CD
 
 ## License
 
