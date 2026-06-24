@@ -12,8 +12,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Get the absolute path of the project directory
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the absolute path of the CLI repository root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  Elric Framework - Installation${NC}"
@@ -55,8 +56,8 @@ cat > "$WRAPPER_SCRIPT" << EOF
 
 PROJECT_DIR="${PROJECT_DIR}"
 
-# Change to project directory and run elric with uv
-cd "\${PROJECT_DIR}" && uv run elric "\$@"
+# Run elric from the CLI project while preserving current working directory
+uv run --project "\${PROJECT_DIR}" elric "\$@"
 EOF
 
 # Make wrapper executable
