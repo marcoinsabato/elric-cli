@@ -3,11 +3,6 @@ import asyncio
 import typer
 from rich.console import Console
 from rich.table import Table
-from sqlalchemy import select
-
-from app.providers.database import AsyncSessionLocal
-from app.utils.api_key import create_api_key_record
-from database.models.api_key import ApiKey
 
 app = typer.Typer(help="API key management commands")
 console = Console()
@@ -17,6 +12,9 @@ console = Console()
 def create_apikey(name: str = typer.Argument(..., help="Name for the API key")):
     """Create a new API key."""
     async def _create():
+        from app.providers.database import AsyncSessionLocal
+        from app.utils.api_key import create_api_key_record
+
         async with AsyncSessionLocal() as session:
             api_key_record, key = await create_api_key_record(name, session)
             
@@ -41,6 +39,11 @@ def create_apikey(name: str = typer.Argument(..., help="Name for the API key")):
 def list_apikeys():
     """List all API keys."""
     async def _list():
+        from sqlalchemy import select
+
+        from app.providers.database import AsyncSessionLocal
+        from database.models.api_key import ApiKey
+
         async with AsyncSessionLocal() as session:
             result = await session.execute(
                 select(ApiKey).order_by(ApiKey.created_at.desc())
@@ -83,6 +86,11 @@ def list_apikeys():
 def revoke_apikey(key_id: str = typer.Argument(..., help="API key ID to revoke")):
     """Revoke an API key by ID."""
     async def _revoke():
+        from sqlalchemy import select
+
+        from app.providers.database import AsyncSessionLocal
+        from database.models.api_key import ApiKey
+
         async with AsyncSessionLocal() as session:
             result = await session.execute(
                 select(ApiKey).where(ApiKey.id == key_id)

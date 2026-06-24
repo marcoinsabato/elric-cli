@@ -1,3 +1,4 @@
+import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -52,14 +53,28 @@ def write_file(path: str, content: str) -> None:
         f.write(content)
 
 
+def get_cli_root() -> Path:
+    """Get the CLI package root directory."""
+    return Path(__file__).resolve().parent
+
+
 def get_project_root() -> Path:
     """Get the project root directory."""
-    return Path(__file__).parent.parent
+    env_project_root_value = os.environ.get("ELRIC_PROJECT_ROOT")
+    if env_project_root_value:
+        env_project_root = Path(env_project_root_value).expanduser()
+        if env_project_root.exists():
+            return env_project_root.resolve()
+    current_path = Path.cwd().resolve()
+    for candidate in [current_path, *current_path.parents]:
+        if (candidate / "pyproject.toml").exists() and (candidate / "app").exists():
+            return candidate
+    return current_path
 
 
 def get_stub_path(stub_name: str) -> str:
     """Get the full path to a stub file."""
-    return str(get_project_root() / "stubs" / f"{stub_name}.stub.py")
+    return str(get_cli_root() / "stubs" / f"{stub_name}.stub.py")
 
 
 # Model configurations
