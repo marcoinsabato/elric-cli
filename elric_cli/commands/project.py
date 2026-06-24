@@ -1,33 +1,20 @@
-import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 import typer
 
-DEFAULT_TEMPLATE_ENV_VAR = "ELRIC_TEMPLATE_REPO"
 DEFAULT_TEMPLATE_REPO = "https://github.com/marcoinsabato/elric-template.git"
 
 
 def new_project(
     name: str = typer.Argument(..., help="Project name"),
     directory: Path = typer.Option(Path("."), "--directory", "-d", help="Directory where project will be created"),
-    template: Optional[str] = typer.Option(
-        None,
-        "--template",
-        "-t",
-        help=(
-            "Template Git repository URL. "
-            "If omitted, uses ELRIC_TEMPLATE_REPO or the official Elric template repository."
-        ),
-    ),
-    branch: Optional[str] = typer.Option(None, "--branch", "-b", help="Template branch/tag to use"),
     install: bool = typer.Option(True, "--install/--no-install", help="Run `uv sync` after project creation"),
     keep_git: bool = typer.Option(False, "--keep-git", help="Keep template .git history"),
 ):
     """Create a new Elric project from a remote template repository."""
-    template_repo = template or os.environ.get(DEFAULT_TEMPLATE_ENV_VAR) or DEFAULT_TEMPLATE_REPO
+    template_repo = DEFAULT_TEMPLATE_REPO
 
     target_path = (directory / name).resolve()
     if target_path.exists() and any(target_path.iterdir()):
@@ -38,8 +25,6 @@ def new_project(
         raise typer.Exit(1)
 
     clone_command = ["git", "clone", "--depth", "1"]
-    if branch:
-        clone_command.extend(["--branch", branch])
     clone_command.extend([template_repo, str(target_path)])
 
     typer.secho(f"Creating project: {name}", fg=typer.colors.BLUE)

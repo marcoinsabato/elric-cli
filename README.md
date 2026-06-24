@@ -1,31 +1,42 @@
 # Elric CLI
 
-CLI ufficiale per creare e gestire progetti Elric.
+Official CLI for bootstrapping and managing Elric projects.
 
-## Installazione
+## Installation
 
-### Con pipx (consigliato)
+After publishing on PyPI:
 
 ```bash
 pipx install elric-cli
-```
-
-### Con uv tool
-
-```bash
+# or
 uv tool install elric-cli
 ```
 
-## Comandi principali
+Upgrade:
+
+```bash
+pipx upgrade elric-cli
+# or
+uv tool upgrade elric-cli
+```
+
+## Quick Start
 
 ```bash
 elric --help
-elric new my_app --template https://github.com/marcoinsabato/elric-template.git
+elric new my_app
+cd my_app
+uv sync
 ```
 
-Dentro un progetto Elric puoi usare anche:
+`elric new` always uses the official template repository:
+
+- `https://github.com/marcoinsabato/elric-template.git`
+
+## Main Commands
 
 ```bash
+elric new my_app
 elric make agent ResearchAssistant --type=tool --model=gpt-4o
 elric make route Chat
 elric migrate
@@ -34,21 +45,23 @@ elric apikey create "My App"
 elric serve
 ```
 
-## Template repository
+## Release to PyPI
 
-Il comando `elric new` usa:
+Automatic publishing is configured via GitHub Actions on tags matching `v*`.
 
-- `--template <git-url>`
-- oppure la variabile ambiente `ELRIC_TEMPLATE_REPO`
-
-Esempio:
+Typical release flow:
 
 ```bash
-export ELRIC_TEMPLATE_REPO=https://github.com/marcoinsabato/elric-template.git
-elric new my_app
+# update version in pyproject.toml
+# commit and push main
+
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
-## Sviluppo locale
+The workflow publishes to PyPI using the `PYPI_API_TOKEN` repository secret.
+
+## Local Development
 
 ```bash
 uv sync
