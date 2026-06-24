@@ -1,6 +1,6 @@
 [project]
 name = "elric-cli"
-version = "1.0.0"
+version = "1.0.2"
 description = "CLI for bootstrapping and managing Elric projects"
 readme = "README.md"
 requires-python = ">=3.12"

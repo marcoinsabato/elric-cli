@@ -1,8 +1,6 @@
-import subprocess
-
 import typer
 
-from elric_cli.utils import get_project_root
+from elric_cli.utils import run_with_project_environment
 
 app = typer.Typer(help="Database migration commands")
 
@@ -10,12 +8,7 @@ app = typer.Typer(help="Database migration commands")
 def run_alembic_command(args: list[str]) -> None:
     """Run an Alembic command."""
     try:
-        result = subprocess.run(
-            ["alembic"] + args,
-            cwd=get_project_root(),
-            capture_output=True,
-            text=True,
-        )
+        result = run_with_project_environment(["alembic", *args])
         
         if result.returncode == 0:
             typer.echo(result.stdout)
@@ -24,13 +17,18 @@ def run_alembic_command(args: list[str]) -> None:
             typer.echo(result.stderr)
             raise typer.Exit(1)
     except FileNotFoundError:
-        typer.secho("✗ Alembic not found. Make sure it's installed.", fg=typer.colors.RED)
+        typer.secho("✗ uv not found. Make sure it's installed.", fg=typer.colors.RED)
+        raise typer.Exit(1)
+    except RuntimeError as e:
+        typer.secho(f"✗ {e}", fg=typer.colors.RED)
         raise typer.Exit(1)
 
 
-@app.command()
-def migrate():
+@app.callback(invoke_without_command=True)
+def migrate_up(ctx: typer.Context):
     """Run all pending migrations (alembic upgrade head)."""
+    if ctx.invoked_subcommand is not None:
+        return
     typer.secho("Running migrations...", fg=typer.colors.BLUE)
     run_alembic_command(["upgrade", "head"])
     typer.secho("✓ Migrations completed", fg=typer.colors.GREEN)

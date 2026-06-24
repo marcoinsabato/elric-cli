@@ -1,8 +1,9 @@
 import os
 import re
+import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from jinja2 import Template
 
@@ -58,23 +59,48 @@ def get_cli_root() -> Path:
     return Path(__file__).resolve().parent
 
 
-def get_project_root() -> Path:
-    """Get the project root directory."""
+def find_project_root() -> Optional[Path]:
+    """Find the nearest Elric project root from the current working directory."""
     env_project_root_value = os.environ.get("ELRIC_PROJECT_ROOT")
     if env_project_root_value:
         env_project_root = Path(env_project_root_value).expanduser()
-        if env_project_root.exists():
+        if (env_project_root / "pyproject.toml").exists() and (env_project_root / "app").exists():
             return env_project_root.resolve()
     current_path = Path.cwd().resolve()
     for candidate in [current_path, *current_path.parents]:
         if (candidate / "pyproject.toml").exists() and (candidate / "app").exists():
             return candidate
-    return current_path
+    return None
+
+
+def get_project_root() -> Path:
+    """Get the current Elric project root directory or raise a helpful error."""
+    project_root = find_project_root()
+    if project_root is None:
+        raise RuntimeError(
+            "No Elric project found in the current directory. "
+            "Run this command inside a project created with `elric new`."
+        )
+    return project_root
 
 
 def get_stub_path(stub_name: str) -> str:
     """Get the full path to a stub file."""
     return str(get_cli_root() / "stubs" / f"{stub_name}.stub.py")
+
+
+def run_with_project_environment(
+    command: list[str], capture_output: bool = True
+) -> subprocess.CompletedProcess[str]:
+    """Run a command inside the target project environment via uv."""
+    project_root = get_project_root()
+    run_kwargs: dict[str, Any] = {
+        "cwd": project_root,
+        "text": True,
+    }
+    if capture_output:
+        run_kwargs["capture_output"] = True
+    return subprocess.run(["uv", "run", "--project", str(project_root), *command], **run_kwargs)
 
 
 # Model configurations

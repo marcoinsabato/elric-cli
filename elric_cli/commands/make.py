@@ -20,6 +20,7 @@ from elric_cli.utils import (
     to_snake_case,
     validate_model,
     write_file,
+    run_with_project_environment,
 )
 
 app = typer.Typer(help="Generate components from stubs")
@@ -190,12 +191,7 @@ def make_model(name: str):
 def make_migration(description: str):
     """Generate a new Alembic migration."""
     try:
-        result = subprocess.run(
-            ["alembic", "revision", "--autogenerate", "-m", description],
-            cwd=get_project_root(),
-            capture_output=True,
-            text=True,
-        )
+        result = run_with_project_environment(["alembic", "revision", "--autogenerate", "-m", description])
         
         if result.returncode == 0:
             typer.secho(f"✓ Created migration: {description}", fg=typer.colors.GREEN)
@@ -205,7 +201,10 @@ def make_migration(description: str):
             typer.echo(result.stderr)
             raise typer.Exit(1)
     except FileNotFoundError:
-        typer.secho("✗ Alembic not found. Make sure it's installed.", fg=typer.colors.RED)
+        typer.secho("✗ uv not found. Make sure it's installed.", fg=typer.colors.RED)
+        raise typer.Exit(1)
+    except RuntimeError as e:
+        typer.secho(f"✗ {e}", fg=typer.colors.RED)
         raise typer.Exit(1)
 
 
