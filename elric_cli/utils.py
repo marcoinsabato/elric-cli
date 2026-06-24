@@ -60,3 +60,107 @@ def get_project_root() -> Path:
 def get_stub_path(stub_name: str) -> str:
     """Get the full path to a stub file."""
     return str(get_project_root() / "stubs" / f"{stub_name}.stub.py")
+
+
+# Model configurations
+AVAILABLE_MODELS = {
+    # Anthropic models
+    "claude-3-5-sonnet-20241022": "anthropic",
+    "claude-3-5-sonnet": "anthropic",
+    "claude-3-opus-20240229": "anthropic",
+    "claude-3-opus": "anthropic",
+    "claude-3-sonnet-20240229": "anthropic",
+    "claude-3-haiku-20240307": "anthropic",
+    "claude-3-haiku": "anthropic",
+    
+    # OpenAI models
+    "gpt-4o": "openai",
+    "gpt-4o-mini": "openai",
+    "gpt-4-turbo": "openai",
+    "gpt-4": "openai",
+    "gpt-3.5-turbo": "openai",
+    
+    # Google models
+    "gemini-1.5-pro": "google",
+    "gemini-1.5-flash": "google",
+    "gemini-pro": "google",
+    
+    # Cohere models
+    "command-r-plus": "cohere",
+    "command-r": "cohere",
+    "command": "cohere",
+}
+
+# Default model
+DEFAULT_MODEL = "gpt-4o"
+
+# Provider to LangChain class mapping
+PROVIDER_LLM_MAP = {
+    "anthropic": {
+        "import": "langchain_anthropic import ChatAnthropic",
+        "class": "ChatAnthropic"
+    },
+    "openai": {
+        "import": "langchain_openai import ChatOpenAI",
+        "class": "ChatOpenAI"
+    },
+    "google": {
+        "import": "langchain_google_genai import ChatGoogleGenerativeAI",
+        "class": "ChatGoogleGenerativeAI"
+    },
+    "cohere": {
+        "import": "langchain_cohere import ChatCohere",
+        "class": "ChatCohere"
+    }
+}
+
+# Agent types
+AGENT_TYPES = {
+    "simple": "agent_simple",
+    "chat": "agent_chat",
+    "tool": "agent_tool",
+    "react": "agent_react",
+    "planner": "agent_planner",
+    "streaming": "agent_streaming",
+}
+
+
+def get_provider_from_model(model: str) -> str:
+    """Get the provider name from a model name."""
+    if model in AVAILABLE_MODELS:
+        return AVAILABLE_MODELS[model]
+    
+    # Try to detect provider from model name prefix
+    model_lower = model.lower()
+    if "claude" in model_lower:
+        return "anthropic"
+    elif "gpt" in model_lower:
+        return "openai"
+    elif "gemini" in model_lower:
+        return "google"
+    elif "command" in model_lower:
+        return "cohere"
+    
+    # Default to OpenAI
+    return "openai"
+
+
+def get_llm_config(model: str) -> dict[str, str]:
+    """Get LLM import and class name for a given model."""
+    provider = get_provider_from_model(model)
+    return PROVIDER_LLM_MAP.get(provider, PROVIDER_LLM_MAP["openai"])
+
+
+def validate_model(model: str) -> bool:
+    """Check if a model is in the list of known models."""
+    return model in AVAILABLE_MODELS
+
+
+def get_available_models() -> list[str]:
+    """Get list of all available models."""
+    return list(AVAILABLE_MODELS.keys())
+
+
+def get_agent_stub_name(agent_type: str) -> str:
+    """Get the stub file name for a given agent type."""
+    return AGENT_TYPES.get(agent_type, "agent_simple")

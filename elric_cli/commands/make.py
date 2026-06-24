@@ -1,16 +1,24 @@
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 import typer
 
 from elric_cli.utils import (
+    AGENT_TYPES,
+    DEFAULT_MODEL,
+    get_agent_stub_name,
+    get_available_models,
+    get_llm_config,
     get_project_root,
+    get_provider_from_model,
     get_stub_path,
     get_timestamp,
     render_template,
     to_kebab_case,
     to_pascal_case,
     to_snake_case,
+    validate_model,
     write_file,
 )
 
@@ -18,22 +26,50 @@ app = typer.Typer(help="Generate components from stubs")
 
 
 @app.command("agent")
-def make_agent(name: str):
-    """Generate a new LangGraph agent."""
+def make_agent(
+    name: str,
+    type: str = typer.Option("simple", "--type", "-t", help=f"Agent type: {', '.join(AGENT_TYPES.keys())}"),
+    model: str = typer.Option(DEFAULT_MODEL, "--model", "-m", help="LLM model to use"),
+):
+    """Generate a new LangGraph agent with specified type and model."""
     class_name = to_pascal_case(name)
     snake_name = to_snake_case(name)
+    
+    # Validate agent type
+    if type not in AGENT_TYPES:
+        typer.secho(f"✗ Invalid agent type: {type}", fg=typer.colors.RED)
+        typer.secho(f"  Available types: {', '.join(AGENT_TYPES.keys())}", fg=typer.colors.YELLOW)
+        raise typer.Exit(1)
+    
+    # Validate model (warn if not in predefined list)
+    if not validate_model(model):
+        typer.secho(f"⚠ Warning: '{model}' is not in the predefined model list", fg=typer.colors.YELLOW)
+        typer.secho(f"  Available models: {', '.join(get_available_models()[:5])}...", fg=typer.colors.YELLOW)
+        typer.secho(f"  Proceeding anyway with auto-detected provider", fg=typer.colors.YELLOW)
+    
+    # Get LLM configuration
+    llm_config = get_llm_config(model)
+    provider = get_provider_from_model(model)
+    
+    # Get the appropriate stub
+    stub_name = get_agent_stub_name(type)
     
     context = {
         "class_name": class_name,
         "snake_name": snake_name,
         "kebab_name": to_kebab_case(name),
+        "model_name": model,
+        "llm_import": llm_config["import"],
+        "llm_class": llm_config["class"],
+        "provider": provider,
     }
     
-    content = render_template(get_stub_path("agent"), context)
+    content = render_template(get_stub_path(stub_name), context)
     output_path = get_project_root() / "app" / "ai" / "agents" / f"{snake_name}.py"
     
     write_file(str(output_path), content)
-    typer.secho(f"✓ Created agent: {output_path}", fg=typer.colors.GREEN)
+    typer.secho(f"✓ Created {type} agent: {output_path}", fg=typer.colors.GREEN)
+    typer.secho(f"  Model: {model} ({provider})", fg=typer.colors.BLUE)
 
 
 @app.command("chain")

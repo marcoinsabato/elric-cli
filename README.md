@@ -278,10 +278,49 @@ Elric fornisce una CLI completa per generare componenti e gestire l'applicazione
 
 ### Generazione Componenti (make:\*)
 
-```bash
-# Genera un nuovo LangGraph agent
-elric make agent ChatAgent
+#### Agent con Tipi e Modelli
 
+Elric supporta diversi tipi di agent con configurazione del modello LLM:
+
+```bash
+# Genera un simple agent (default) con GPT-4o (default)
+elric make agent MyAgent
+
+# Genera un chat agent con memoria conversazionale
+elric make agent CustomerSupport --type=chat --model=claude-3-5-sonnet
+
+# Genera un tool agent che può usare tools
+elric make agent ResearchAssistant --type=tool --model=gpt-4o
+
+# Genera un ReAct agent (Reasoning + Acting)
+elric make agent DataAnalyzer --type=react --model=gpt-4-turbo
+
+# Genera un planner agent per task complessi
+elric make agent TaskPlanner --type=planner --model=gemini-1.5-pro
+
+# Genera un streaming agent per risposte in tempo reale
+elric make agent StreamBot --type=streaming --model=claude-3-opus
+```
+
+**Tipi di Agent Disponibili:**
+
+- `simple` - Agent base semplice (default)
+- `chat` - Agent conversazionale con memoria
+- `tool` - Agent che può usare tools
+- `react` - Agent con reasoning e acting
+- `planner` - Agent per pianificazione task complessi
+- `streaming` - Agent con supporto streaming
+
+**Modelli Supportati:**
+
+- **Anthropic**: `claude-3-5-sonnet`, `claude-3-opus`, `claude-3-haiku`
+- **OpenAI**: `gpt-4o`, `gpt-4-turbo`, `gpt-4`, `gpt-3.5-turbo`
+- **Google**: `gemini-1.5-pro`, `gemini-1.5-flash`, `gemini-pro`
+- **Cohere**: `command-r-plus`, `command-r`, `command`
+
+#### Altri Componenti
+
+```bash
 # Genera una nuova LangChain chain
 elric make chain SummaryChain
 
