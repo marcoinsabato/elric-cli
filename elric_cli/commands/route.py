@@ -37,7 +37,13 @@ def list_routes():
         
         console.print(table)
         console.print(f"\n[bold]Total routes:[/bold] {len(routes)}")
-        
+    except ModuleNotFoundError as e:
+        typer.secho(
+            "✗ This command must run inside an Elric application project.",
+            fg=typer.colors.RED,
+        )
+        typer.secho(f"  Details: {e}", fg=typer.colors.YELLOW)
+        raise typer.Exit(1)
     except Exception as e:
         typer.secho(f"✗ Failed to list routes: {e}", fg=typer.colors.RED)
         raise typer.Exit(1)

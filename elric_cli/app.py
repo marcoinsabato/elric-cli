@@ -5,7 +5,7 @@ from elric_cli.commands.project import new_project
 
 app = typer.Typer(
     name="elric",
-    help="Elric Framework CLI - AI-first FastAPI framework",
+    help="Elric CLI - bootstrap and manage Elric projects",
     add_completion=False,
 )
 

@@ -7,6 +7,7 @@ from typing import Optional
 import typer
 
 DEFAULT_TEMPLATE_ENV_VAR = "ELRIC_TEMPLATE_REPO"
+DEFAULT_TEMPLATE_REPO = "https://github.com/marcoinsabato/elric-template.git"
 
 
 def new_project(
@@ -16,20 +17,17 @@ def new_project(
         None,
         "--template",
         "-t",
-        help="Template Git repository URL. If omitted, uses ELRIC_TEMPLATE_REPO.",
+        help=(
+            "Template Git repository URL. "
+            "If omitted, uses ELRIC_TEMPLATE_REPO or the official Elric template repository."
+        ),
     ),
     branch: Optional[str] = typer.Option(None, "--branch", "-b", help="Template branch/tag to use"),
     install: bool = typer.Option(True, "--install/--no-install", help="Run `uv sync` after project creation"),
     keep_git: bool = typer.Option(False, "--keep-git", help="Keep template .git history"),
 ):
     """Create a new Elric project from a remote template repository."""
-    template_repo = template or os.environ.get(DEFAULT_TEMPLATE_ENV_VAR)
-    if not template_repo:
-        typer.secho(
-            f"✗ Missing template repository. Pass --template or set {DEFAULT_TEMPLATE_ENV_VAR}.",
-            fg=typer.colors.RED,
-        )
-        raise typer.Exit(1)
+    template_repo = template or os.environ.get(DEFAULT_TEMPLATE_ENV_VAR) or DEFAULT_TEMPLATE_REPO
 
     target_path = (directory / name).resolve()
     if target_path.exists() and any(target_path.iterdir()):

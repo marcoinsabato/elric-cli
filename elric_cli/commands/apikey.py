@@ -8,6 +8,15 @@ app = typer.Typer(help="API key management commands")
 console = Console()
 
 
+def _missing_project_dependency(error: Exception) -> None:
+    message = (
+        "This command must run inside an Elric application project. "
+        "Use `elric new <name>` to create one, then run this command in that directory."
+    )
+    typer.secho(f"✗ {message}", fg=typer.colors.RED)
+    typer.secho(f"  Details: {error}", fg=typer.colors.YELLOW)
+
+
 @app.command("create")
 def create_apikey(name: str = typer.Argument(..., help="Name for the API key")):
     """Create a new API key."""
@@ -30,6 +39,9 @@ def create_apikey(name: str = typer.Argument(..., help="Name for the API key")):
     
     try:
         asyncio.run(_create())
+    except ModuleNotFoundError as e:
+        _missing_project_dependency(e)
+        raise typer.Exit(1)
     except Exception as e:
         typer.secho(f"✗ Failed to create API key: {e}", fg=typer.colors.RED)
         raise typer.Exit(1)
@@ -77,6 +89,9 @@ def list_apikeys():
     
     try:
         asyncio.run(_list())
+    except ModuleNotFoundError as e:
+        _missing_project_dependency(e)
+        raise typer.Exit(1)
     except Exception as e:
         typer.secho(f"✗ Failed to list API keys: {e}", fg=typer.colors.RED)
         raise typer.Exit(1)
@@ -111,6 +126,9 @@ def revoke_apikey(key_id: str = typer.Argument(..., help="API key ID to revoke")
         asyncio.run(_revoke())
     except typer.Exit:
         raise
+    except ModuleNotFoundError as e:
+        _missing_project_dependency(e)
+        raise typer.Exit(1)
     except Exception as e:
         typer.secho(f"✗ Failed to revoke API key: {e}", fg=typer.colors.RED)
         raise typer.Exit(1)
