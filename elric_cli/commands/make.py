@@ -1,6 +1,4 @@
-import subprocess
 from pathlib import Path
-from typing import Optional
 
 import typer
 
@@ -24,6 +22,37 @@ from elric_cli.utils import (
 )
 
 app = typer.Typer(help="Generate components from stubs")
+
+
+def register_seeder_in_runner(project_root: Path, snake_name: str) -> None:
+    """Register a seeder in database/seeders/__main__.py."""
+    runner_path = project_root / "database" / "seeders" / "__main__.py"
+    import_line = f"from database.seeders.{snake_name}_seeder import run as run_{snake_name}_seeder"
+    await_line = f"    await run_{snake_name}_seeder()"
+
+    if not runner_path.exists():
+        base_content = (
+            "import asyncio\n\n\n"
+            "async def main() -> None:\n"
+            "    pass\n\n\n"
+            "if __name__ == \"__main__\":\n"
+            "    asyncio.run(main())\n"
+        )
+        write_file(str(runner_path), base_content)
+
+    content = runner_path.read_text()
+
+    if import_line not in content:
+        content = content.replace("import asyncio", f"import asyncio\n{import_line}")
+
+    if await_line not in content:
+        if "    pass" in content:
+            content = content.replace("    pass", await_line)
+        else:
+            marker = "async def main() -> None:\n"
+            content = content.replace(marker, f"{marker}{await_line}\n")
+
+    write_file(str(runner_path), content)
 
 
 @app.command("agent")
@@ -168,8 +197,53 @@ def make_schema(name: str):
     typer.secho(f"✓ Created schema: {output_path}", fg=typer.colors.GREEN)
 
 
+@app.command("request")
+def make_request(name: str):
+    """Generate a new request schema."""
+    class_base_name = to_pascal_case(name).removesuffix("Request")
+    snake_base_name = to_snake_case(name).removesuffix("_request")
+
+    context = {
+        "class_name": class_base_name,
+        "snake_name": snake_base_name,
+        "kebab_name": to_kebab_case(snake_base_name),
+    }
+
+    content = render_template(get_stub_path("request"), context)
+    output_path = get_project_root() / "app" / "schemas" / "requests" / f"{snake_base_name}_request.py"
+
+    write_file(str(output_path), content)
+    typer.secho(f"✓ Created request schema: {output_path}", fg=typer.colors.GREEN)
+
+
+@app.command("response")
+def make_response(name: str):
+    """Generate a new response schema."""
+    class_base_name = to_pascal_case(name).removesuffix("Response")
+    snake_base_name = to_snake_case(name).removesuffix("_response")
+
+    context = {
+        "class_name": class_base_name,
+        "snake_name": snake_base_name,
+        "kebab_name": to_kebab_case(snake_base_name),
+    }
+
+    content = render_template(get_stub_path("response"), context)
+    output_path = get_project_root() / "app" / "schemas" / "responses" / f"{snake_base_name}_response.py"
+
+    write_file(str(output_path), content)
+    typer.secho(f"✓ Created response schema: {output_path}", fg=typer.colors.GREEN)
+
+
 @app.command("model")
-def make_model(name: str):
+def make_model(
+    name: str,
+    migration: bool = typer.Option(False, "--migration", "-m", help="Also create a migration"),
+    route: bool = typer.Option(False, "--route", "-r", help="Also create a route"),
+    controller: bool = typer.Option(False, "--controller", "-c", help="Also create a controller"),
+    request: bool = typer.Option(False, "--request", help="Also create a request schema"),
+    response: bool = typer.Option(False, "--response", help="Also create a response schema"),
+):
     """Generate a new SQLModel entity."""
     class_name = to_pascal_case(name)
     snake_name = to_snake_case(name)
@@ -185,6 +259,17 @@ def make_model(name: str):
     
     write_file(str(output_path), content)
     typer.secho(f"✓ Created model: {output_path}", fg=typer.colors.GREEN)
+
+    if route:
+        make_route(name)
+    if controller:
+        make_controller(name)
+    if request:
+        make_request(name)
+    if response:
+        make_response(name)
+    if migration:
+        make_migration(f"create_{snake_name}")
 
 
 @app.command("migration")
@@ -263,3 +348,30 @@ def make_test(name: str):
     
     write_file(str(output_path), content)
     typer.secho(f"✓ Created test: {output_path}", fg=typer.colors.GREEN)
+
+
+@app.command("seeder")
+def make_seeder(
+    name: str,
+    register: bool = typer.Option(False, "--register", help="Also register the seeder in database/seeders/__main__.py"),
+):
+    """Generate a new database seeder."""
+    class_name = to_pascal_case(name).removesuffix("Seeder")
+    snake_name = to_snake_case(name).removesuffix("_seeder")
+
+    context = {
+        "class_name": class_name,
+        "snake_name": snake_name,
+        "kebab_name": to_kebab_case(name),
+    }
+
+    content = render_template(get_stub_path("seeder"), context)
+    project_root = get_project_root()
+    output_path = project_root / "database" / "seeders" / f"{snake_name}_seeder.py"
+
+    write_file(str(output_path), content)
+    typer.secho(f"✓ Created seeder: {output_path}", fg=typer.colors.GREEN)
+
+    if register:
+        register_seeder_in_runner(project_root, snake_name)
+        typer.secho("✓ Registered seeder in database/seeders/__main__.py", fg=typer.colors.GREEN)
